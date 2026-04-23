@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_URL = import.meta.env.VITE_API_URL || 'https://telegram-shop-backend-production.up.railway.app';
 
 async function handle(res) {
   if (!res.ok) {
