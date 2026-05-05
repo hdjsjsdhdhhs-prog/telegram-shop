@@ -30,20 +30,29 @@ export default function CheckoutPage() {
     useState<(typeof DELIVERIES)[number]["value"]>("COURIER");
   const [address, setAddress] = useState("");
   const [comment, setComment] = useState("");
+  const [contact, setContact] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const currency = items[0]?.currency ?? "RUB";
   const needsAddress = deliveryMethod === "COURIER";
   const canSubmit =
-    items.length > 0 && !submitting && (!needsAddress || address.trim().length > 0);
+    items.length > 0 &&
+    !submitting &&
+    contact.trim().length > 0 &&
+    (!needsAddress || address.trim().length > 0);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
+    if (contact.trim().length === 0) {
+      alert("Укажите контакт (Telegram @username или телефон)");
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
+      const finalComment = `${comment || ""}\nКонтакт: ${contact.trim()}`.trim();
       const res = await fetch("/api/order", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...headers },
@@ -52,7 +61,7 @@ export default function CheckoutPage() {
           paymentMethod,
           deliveryMethod,
           address: needsAddress ? address : null,
-          comment: comment || null,
+          comment: finalComment,
         }),
       });
       const json = (await res.json()) as { ok?: boolean; orderId?: string; error?: string };
@@ -119,6 +128,20 @@ export default function CheckoutPage() {
               />
             </Section>
           )}
+
+          <Section title="Контакт (Telegram @username или телефон)">
+            <input
+              className="input"
+              value={contact}
+              onChange={(e) => setContact(e.target.value)}
+              placeholder="@username или +7XXXXXXXXXX"
+              required
+              autoComplete="tel"
+            />
+            <p className="mt-2 text-xs text-[color:var(--tg-text-muted)]">
+              Если вы не из Telegram — обязательно укажите контакт
+            </p>
+          </Section>
 
           <Section title="Комментарий">
             <textarea
